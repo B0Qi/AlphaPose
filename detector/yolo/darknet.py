@@ -101,9 +101,8 @@ class DetectionLayer(nn.Module):
     
     def forward(self, x, inp_dim, num_classes, confidence):
         x = x.data
-        global args
-        prediction = x.to(args.device)
-        prediction = predict_transform(prediction, inp_dim, self.anchors, num_classes, confidence, args)
+        prediction = x.to(0)
+        prediction = predict_transform(prediction, inp_dim, self.anchors, num_classes, confidence,None)
         return prediction
         
 
@@ -377,8 +376,8 @@ class Darknet(nn.Module):
                 num_classes = int (modules[i]["classes"])
                 
                 #Output the result
-                x = x.data.to(args.device)
-                x = predict_transform(x, inp_dim, anchors, num_classes, args)
+                x = x.data.to(0)
+                x = predict_transform(x, inp_dim, anchors, num_classes,None)
                 
                 if type(x) == int:
                     continue
