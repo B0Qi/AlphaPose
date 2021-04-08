@@ -5,24 +5,24 @@
 
 """Script for single-image demo."""
 import argparse
-import torch
+import math
 import os
 import platform
 import sys
-import math
 import time
 
 import cv2
 import numpy as np
-
-from alphapose.utils.transforms import get_func_heatmap_to_coord
-from alphapose.utils.pPose_nms import pose_nms
-from alphapose.utils.presets import SimpleTransform
-from alphapose.utils.transforms import flip, flip_heatmap
+import torch
 from alphapose.models import builder
 from alphapose.utils.config import update_config
-from detector.apis import get_detector
+from alphapose.utils.pPose_nms import pose_nms
+from alphapose.utils.presets import SimpleTransform
+from alphapose.utils.transforms import (flip, flip_heatmap,
+                                        get_func_heatmap_to_coord)
 from alphapose.utils.vis import getTime
+from detector.apis import get_detector
+from easydict import EasyDict
 
 """----------------------------- Demo options -----------------------------"""
 parser = argparse.ArgumentParser(description='AlphaPose Single-Image Demo')
@@ -62,7 +62,30 @@ parser.add_argument('--pose_flow', dest='pose_flow',
 parser.add_argument('--pose_track', dest='pose_track',
                     help='track humans in video with reid', action='store_true', default=False)
 
-args = parser.parse_args()
+# args = parser.parse_args()
+
+
+
+
+args = EasyDict({
+    'cfg':'/media/qifubo/_dde_data/tools/alphapose2/AlphaPose/configs/halpe_136/resnet/256x192_res50_lr1e-3_2x-regression.yaml',
+    'checkpoint':'/media/qifubo/_dde_data/tools/AlphaPose/pretrained_models/halpe136_fast_res50_256x192.pth.pth',
+    'detector':'yolo',
+    'inputimg':'/media/qifubo/_dde_data/tools/alphapose2/AlphaPose/examples/demo/1.jpg',
+    'vis':False,
+    'showbox':False,
+    'gpus':'0',
+    'pose_track':False,
+    'pose_flow':False,
+    'min_box_area':0,
+    'vis_fast':False,
+    'flip':False,
+    'profile':False,
+    'eval':False,
+    'showbox':True,
+    'format':'coco'
+})
+
 cfg = update_config(args.cfg)
 
 args.gpus = [int(args.gpus[0])] if torch.cuda.device_count() >= 1 else [-1]
@@ -276,6 +299,10 @@ class SingleImageAlphaPose():
             start_time = getTime()
             with torch.no_grad():
                 (inps, orig_img, im_name, boxes, scores, ids, cropped_boxes) = self.det_loader.process(im_name, image).read()
+                # print("inps",inps)
+                # print(inps[0].shape)
+                # print(boxes)
+                # print(cropped_boxes)
                 if orig_img is None:
                     raise Exception("no image is given")
                 if boxes is None or boxes.nelement() == 0:
